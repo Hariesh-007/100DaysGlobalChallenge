@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cuda_runtime.h>
 
-// simple kernel to add two vectors
 __global__ void vecAdd(float* a, float* b, float* c, int n) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < n) {
@@ -17,31 +16,25 @@ int main() {
     
     float *dev_a, *dev_b, *dev_c;
     
-    // allocate device memory
     cudaMalloc(&dev_a, n * sizeof(float));
     cudaMalloc(&dev_b, n * sizeof(float)); 
     cudaMalloc(&dev_c, n * sizeof(float));
     
-    // copy to device
     cudaMemcpy(dev_a, a, n * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(dev_b, b, n * sizeof(float), cudaMemcpyHostToDevice);
     
-    // launch kernel - using 32 threads per block cause why not
     int block_size = 32;
     int grid_size = (n + block_size - 1) / block_size;
     vecAdd<<<grid_size, block_size>>>(dev_a, dev_b, dev_c, n);
     
-    // get result back
     cudaMemcpy(c, dev_c, n * sizeof(float), cudaMemcpyDeviceToHost);
     
-    // print some results to check
     std::cout << "First few results: ";
     for(int i = 0; i < 5; i++) {
         std::cout << c[i] << " ";
     }
     std::cout << std::endl;
     
-    // cleanup
     cudaFree(dev_a);
     cudaFree(dev_b);
     cudaFree(dev_c);
